@@ -21,6 +21,10 @@ public class FileNode {
     }
 
     public void addDependency(FileNode node) {
+        if (node == null) {
+            throw new NullPointerException();
+        }
+
         dependencies.add(node);
     }
 }

@@ -8,7 +8,7 @@ public class Main {
         DependencyTree tree;
         try {
             tree = DependencyTree.build(Path.of("root"));
-        } catch (IOException e) {
+        } catch (IOException | DependencyNotFoundException e) {
             throw new RuntimeException(e);
         }
         for (FileNode node : tree.getNodes()) {
@@ -16,6 +16,14 @@ public class Main {
             for (FileNode dependency : node.getDependencies()) {
                 System.out.println("    " + dependency.getPath());
             }
+        }
+
+        try {
+            for (FileNode node : tree.getOrderedList()) {
+                System.out.println(node.getPath());
+            }
+        } catch (CyclicDependencyException e) {
+            throw new RuntimeException(e);
         }
 
         System.out.println("Fine :<");
