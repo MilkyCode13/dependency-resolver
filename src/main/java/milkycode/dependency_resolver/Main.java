@@ -2,30 +2,35 @@ package milkycode.dependency_resolver;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String rootDirectoryPath = scanner.nextLine();
+
         DependencyTree tree;
         try {
-            tree = DependencyTree.build(Path.of("root"));
-        } catch (IOException | DependencyNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        for (FileNode node : tree.getNodes()) {
-            System.out.println(node.getPath());
-            for (FileNode dependency : node.getDependencies()) {
-                System.out.println("    " + dependency.getPath());
-            }
+            tree = DependencyTree.build(Path.of(rootDirectoryPath));
+        } catch (IOException e) {
+            System.err.println("Read error: " + e.getMessage());
+            return;
+        } catch (DependencyNotFoundException e) {
+            System.err.println(e.getMessage());
+            return;
         }
 
+        List<FileNode> fileNodeList;
         try {
-            for (FileNode node : tree.getOrderedList()) {
-                System.out.println(node.getPath());
-            }
+            fileNodeList = tree.getOrderedList();
         } catch (CyclicDependencyException e) {
-            throw new RuntimeException(e);
+            System.err.println("Cyclic dependency found. Printing all files");
+            fileNodeList = tree.getNodes();
         }
 
-        System.out.println("Fine :<");
+        for (FileNode node : fileNodeList) {
+            System.out.println(node.getPath());
+        }
     }
 }

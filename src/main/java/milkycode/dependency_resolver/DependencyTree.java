@@ -34,7 +34,7 @@ public class DependencyTree {
             for (Path dependency : dependencyPaths) {
                 FileNode dependencyNode = map.get(rootPath.resolve(dependency));
                 if (dependencyNode == null) {
-                    throw new DependencyNotFoundException();
+                    throw new DependencyNotFoundException(dependency);
                 }
                 node.addDependency(dependencyNode);
             }
