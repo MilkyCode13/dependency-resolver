@@ -34,7 +34,7 @@ public class DependencyTree {
             for (Path dependency : dependencyPaths) {
                 FileNode dependencyNode = map.get(rootPath.resolve(dependency));
                 if (dependencyNode == null) {
-                    throw new DependencyNotFoundException(dependency);
+                    throw new DependencyNotFoundException(node.getPath(), dependency);
                 }
                 node.addDependency(dependencyNode);
             }
@@ -88,14 +88,16 @@ public class DependencyTree {
     private void walkTree(List<FileNode> list) throws CyclicDependencyException {
         Set<FileNode> rootNodes = getRootNodes();
 
-        if (rootNodes.isEmpty() && !nodes.isEmpty()) {
-            throw new CyclicDependencyException();
-        }
-
         Map<FileNode, WalkStatus> statusMap = new HashMap<>(nodes.stream().collect(Collectors.toMap(Function.identity(), fileNode -> WalkStatus.UNDISCOVERED)));
 
         for (FileNode node : rootNodes) {
             walkTree(list, statusMap, node);
+        }
+
+        for (FileNode node : nodes) {
+            if (statusMap.get(node) == WalkStatus.UNDISCOVERED) {
+                walkTree(list, statusMap, node);
+            }
         }
     }
 
@@ -105,13 +107,18 @@ public class DependencyTree {
         }
 
         if (statusMap.get(currentNode) == WalkStatus.DISCOVERED) {
-            throw new CyclicDependencyException();
+            throw new CyclicDependencyException(currentNode);
         }
 
         statusMap.put(currentNode, WalkStatus.DISCOVERED);
 
         for (FileNode dependency : currentNode.getDependencies()) {
-            walkTree(list, statusMap, dependency);
+            try {
+                walkTree(list, statusMap, dependency);
+            } catch (CyclicDependencyException e) {
+                e.addCycledNode(currentNode);
+                throw e;
+            }
         }
 
         list.add(currentNode);
