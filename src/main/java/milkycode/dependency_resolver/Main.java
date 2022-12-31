@@ -3,11 +3,20 @@ package milkycode.dependency_resolver;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Main runnable class.
+ */
 public class Main {
+    /**
+     * Main program entrypoint.
+     *
+     * @param args Command line arguments.
+     */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -17,7 +26,7 @@ public class Main {
         DependencyTree tree;
         try {
             tree = DependencyTree.build(Path.of(rootDirectoryPath));
-        } catch (IOException e) {
+        } catch (IOException | UncheckedIOException e) {
             System.err.println("Read error: " + e.getMessage());
             return;
         } catch (DependencyNotFoundException e) {
@@ -30,12 +39,18 @@ public class Main {
         for (FileNode node : fileNodeList) {
             try {
                 outputFile(node.getPath());
-            } catch (IOException e) {
+            } catch (IOException | UncheckedIOException e) {
                 System.err.println("Failed to print file: '" + node.getPath() + "'");
             }
         }
     }
 
+    /**
+     * Gets a list of file nodes to display.
+     *
+     * @param tree A tree to get the list from.
+     * @return The list of file nodes to display.
+     */
     private static List<FileNode> getFileNodeList(DependencyTree tree) {
         try {
             return tree.getOrderedList();
@@ -49,6 +64,13 @@ public class Main {
         }
     }
 
+    /**
+     * Prints file contents to the display.
+     *
+     * @param path A path to the file to display.
+     * @throws IOException          An error occurred while reading file.
+     * @throws UncheckedIOException An error occurred while reading file contents.
+     */
     private static void outputFile(Path path) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toFile()))) {
             reader.lines().forEachOrdered(System.out::println);

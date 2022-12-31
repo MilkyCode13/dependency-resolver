@@ -12,18 +12,35 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A tree of file nodes with dependencies between them.
+ */
 public class DependencyTree {
-    private static final Pattern requirePattern = Pattern.compile("^require '(.*)'$");
+    private static final Pattern requirePattern = Pattern.compile("^\\s*require '(.*)'\\s*$");
     private final List<FileNode> nodes;
 
     private DependencyTree(List<FileNode> nodes) {
         this.nodes = nodes;
     }
 
+    /**
+     * Gets the list of file nodes.
+     *
+     * @return The list of file nodes.
+     */
     public List<FileNode> getNodes() {
         return Collections.unmodifiableList(nodes);
     }
 
+    /**
+     * Builds a dependency tree from a root path.
+     *
+     * @param rootPath The root path to build the dependency tree from.
+     * @return Created dependency tree.
+     * @throws IOException                  An error occurred while traversing and scanning files.
+     * @throws java.io.UncheckedIOException An error occurred while traversing and scanning files.
+     * @throws DependencyNotFoundException  Invalid dependency encountered in some file.
+     */
     public static DependencyTree build(Path rootPath) throws IOException, DependencyNotFoundException {
         List<Path> paths = getValidPaths(rootPath);
         List<FileNode> nodes = new ArrayList<>(paths.stream().map(FileNode::new).toList());
@@ -59,6 +76,12 @@ public class DependencyTree {
         }
     }
 
+    /**
+     * Gets a list of nodes ordered according to their dependencies.
+     *
+     * @return The list of nodes ordered.
+     * @throws CyclicDependencyException A cyclic dependency encountered while traversing the tree.
+     */
     public List<FileNode> getOrderedList() throws CyclicDependencyException {
         List<FileNode> list = new ArrayList<>();
 
